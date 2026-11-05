@@ -1,3 +1,9 @@
+# Version 1.1.1 validation
+
+- All 24 automated tests pass; the universal Intel and Apple Silicon release builds successfully.
+- The app uses a single main window and terminates when it closes. Native UI testing exercised the window-close action with Command-W and verified that the test process exited successfully and disappeared from the running-app inventory.
+- Computer storage and ordering are unchanged by this lifecycle update.
+
 # Version 1.1.0 validation
 
 - All 24 automated tests pass: 14 core tests and 10 application-state tests.

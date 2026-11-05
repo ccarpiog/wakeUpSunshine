@@ -24,6 +24,8 @@ This version focuses on macOS and Wake-on-LAN. It does not include iCloud synchr
 
 Download the [signed release ZIP](https://github.com/ccarpiog/wakeUpSunshine/releases/latest), unzip it, and move **Wake Up Sunshine.app** to Applications. Open the app, then add a computer or import a list. Allow local network access when macOS asks.
 
+Clicking the red window-close button quits the app completely. Computer records and their order are saved as you make changes and are available when you reopen it.
+
 Enable Wake-on-LAN in each target computer's BIOS/UEFI and network adapter settings. An Ethernet connection is generally needed; wake support depends on the hardware, operating system, and sleep/shutdown state.
 
 Choose computers using the list checkboxes, then wake the selection. A successful send means the operating system accepted the UDP packets. It does **not** prove that the remote computer woke up. **Online** means the configured TCP probe port accepted a connection; a sleeping computer and an awake computer blocking that port can both appear unreachable.
@@ -98,8 +100,8 @@ The release script follows the owner's local `SIGN_AND_NOTARIZE.md` runbook. It 
 The script signs with hardened runtime and a secure timestamp, submits the app to Apple, staples the accepted ticket, and verifies Gatekeeper acceptance. It then creates the distribution ZIP **after** stapling, with a SHA-256 checksum:
 
 ```text
-build/WakeUpSunshine-1.1.0-macOS.zip
-build/WakeUpSunshine-1.1.0-macOS.zip.sha256
+build/WakeUpSunshine-1.1.1-macOS.zip
+build/WakeUpSunshine-1.1.1-macOS.zip.sha256
 build/notarization.json
 ```
 

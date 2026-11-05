@@ -1,10 +1,12 @@
 import SwiftUI
+import AppKit
 
 @main
 struct WakeUpSunshineApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store = AppStore(demo: ProcessInfo.processInfo.arguments.contains("--demo"))
     var body: some Scene {
-        WindowGroup("Wake Up Sunshine") {
+        Window("Wake Up Sunshine", id: "main") {
             ContentView(store: store)
                 .tint(Sunshine.accent)
                 .frame(minWidth: 920, minHeight: 640)
@@ -23,6 +25,12 @@ struct WakeUpSunshineApp: App {
                     .disabled(store.selection.isEmpty || store.isWaking)
             }
         }
+    }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
     }
 }
 
