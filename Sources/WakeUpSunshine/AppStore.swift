@@ -92,11 +92,40 @@ final class AppStore: ObservableObject {
             (selectedGroup == nil || computer.group == selectedGroup) &&
             (searchText.isEmpty || [computer.name, computer.ipAddress, computer.macAddress, computer.group]
                 .contains { $0.localizedCaseInsensitiveContains(searchText) })
-        }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        }
     }
     var selectedComputers: [Computer] { computers.filter { selection.contains($0.id) } }
     var groups: [String] { Array(Set(computers.map(\.group))).sorted() }
     var focusedComputer: Computer? { computers.first { $0.id == focusedID } }
+
+    /// Reorder visible computers in their existing slots so hidden entries keep their positions.
+    func moveComputers(fromOffsets offsets: IndexSet, toOffset destination: Int) throws {
+        var visible = filteredComputers
+        guard !offsets.isEmpty, offsets.allSatisfy({ visible.indices.contains($0) }),
+              (0...visible.count).contains(destination) else { return }
+        let visibleIDs = Set(visible.map(\.id))
+        visible.move(fromOffsets: offsets, toOffset: destination)
+        var updated = computers
+        var nextVisible = 0
+        for index in updated.indices where visibleIDs.contains(updated[index].id) {
+            updated[index] = visible[nextVisible]
+            nextVisible += 1
+        }
+        guard updated != computers else { return }
+        try persist(updated)
+    }
+
+    func canMoveComputer(id: UUID, direction: Int) -> Bool {
+        guard direction == -1 || direction == 1,
+              let index = filteredComputers.firstIndex(where: { $0.id == id }) else { return false }
+        return filteredComputers.indices.contains(index + direction)
+    }
+
+    func moveComputer(id: UUID, direction: Int) throws {
+        guard canMoveComputer(id: id, direction: direction),
+              let index = filteredComputers.firstIndex(where: { $0.id == id }) else { return }
+        try moveComputers(fromOffsets: IndexSet(integer: index), toOffset: direction < 0 ? index - 1 : index + 2)
+    }
 
     func saveComputer(_ computer: Computer) throws {
         let validated = try computer.validated()

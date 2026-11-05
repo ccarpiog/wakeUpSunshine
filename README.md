@@ -12,6 +12,7 @@ Requires **macOS 14 or later**. The release app supports Apple Silicon and Intel
 - Import CSV, TSV, or semicolon-separated lists, or paste rows directly. Review valid rows and errors before saving.
 - Skip existing MAC addresses or update their settings when importing.
 - Organize computers into groups, search the list, and select multiple computers to wake together.
+- Reorder computers with the up/down controls beside each row, or right-click and choose Move Up / Move Down. The order is saved automatically.
 - Send real Wake-on-LAN magic packets, with per-computer broadcast address and UDP port.
 - Check a configurable TCP service to see whether a computer is reachable.
 - Review per-computer wake results and export the inventory as CSV.
@@ -26,6 +27,10 @@ Download the [signed release ZIP](https://github.com/ccarpiog/wakeUpSunshine/rel
 Enable Wake-on-LAN in each target computer's BIOS/UEFI and network adapter settings. An Ethernet connection is generally needed; wake support depends on the hardware, operating system, and sleep/shutdown state.
 
 Choose computers using the list checkboxes, then wake the selection. A successful send means the operating system accepted the UDP packets. It does **not** prove that the remote computer woke up. **Online** means the configured TCP probe port accepted a connection; a sleeping computer and an awake computer blocking that port can both appear unreachable.
+
+**Select all** selects every saved computer, including computers hidden by a search or group filter. When a filter hides selected computers, the sidebar shows how many are outside the current view. **Clear** removes the selection.
+
+Use the up/down arrows on the right of a computer row to reorder the list. You can also right-click a row and choose **Move Up** or **Move Down**. When a search or group filter is active, reordering rearranges the visible computers while hidden computers keep their positions. New computers are appended; editing or updating an existing computer preserves its position. CSV exports use the saved list order.
 
 The default probe port is **22**. Change it to a service that is actually listening on that computer—for example SSH (22), SMB (445), RDP (3389), or your configured Sunshine service port. The probe does not sign in or issue commands.
 
@@ -93,8 +98,8 @@ The release script follows the owner's local `SIGN_AND_NOTARIZE.md` runbook. It 
 The script signs with hardened runtime and a secure timestamp, submits the app to Apple, staples the accepted ticket, and verifies Gatekeeper acceptance. It then creates the distribution ZIP **after** stapling, with a SHA-256 checksum:
 
 ```text
-build/WakeUpSunshine-1.0.0-macOS.zip
-build/WakeUpSunshine-1.0.0-macOS.zip.sha256
+build/WakeUpSunshine-1.1.0-macOS.zip
+build/WakeUpSunshine-1.1.0-macOS.zip.sha256
 build/notarization.json
 ```
 

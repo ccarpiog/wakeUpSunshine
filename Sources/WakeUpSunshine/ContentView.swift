@@ -97,10 +97,20 @@ struct ContentView: View {
                                         isFocused: store.focusedID == computer.id,
                                         isSelected: store.selection.contains(computer.id),
                                         focus: { store.focusedID = computer.id },
-                                        toggle: { if store.selection.contains(computer.id) { store.selection.remove(computer.id) } else { store.selection.insert(computer.id) } })
+                                        toggle: { if store.selection.contains(computer.id) { store.selection.remove(computer.id) } else { store.selection.insert(computer.id) } },
+                                        canMoveUp: store.canMoveComputer(id: computer.id, direction: -1),
+                                        canMoveDown: store.canMoveComputer(id: computer.id, direction: 1),
+                                        moveUp: { moveComputer(computer.id, direction: -1) },
+                                        moveDown: { moveComputer(computer.id, direction: 1) })
                             .contextMenu {
                                 Button("Wake Computer") { Task { await store.wake([computer]) } }.disabled(store.isWaking)
                                 Button("Edit…") { editingComputer = computer; showingEditor = true }
+                                Divider()
+                                Button("Move Up") { moveComputer(computer.id, direction: -1) }
+                                    .disabled(!store.canMoveComputer(id: computer.id, direction: -1))
+                                Button("Move Down") { moveComputer(computer.id, direction: 1) }
+                                    .disabled(!store.canMoveComputer(id: computer.id, direction: 1))
+                                Divider()
                                 Button("Remove…", role: .destructive) { deletion = [computer.id]; showingDelete = true }
                             }
                         }
@@ -110,10 +120,18 @@ struct ContentView: View {
             Divider()
             VStack(spacing: 12) {
                 HStack {
-                    Button("Select visible") { store.selection.formUnion(store.filteredComputers.map(\.id)) }.buttonStyle(.plain).disabled(store.filteredComputers.isEmpty)
+                    Button("Select all") { store.selection = Set(store.computers.map(\.id)) }
+                        .buttonStyle(.plain).disabled(store.computers.isEmpty)
+                        .help("Select every saved computer, including computers hidden by search or group filters")
                     Spacer()
                     Button("Clear") { store.selection.removeAll() }.buttonStyle(.plain).disabled(store.selection.isEmpty)
                 }.font(.caption).foregroundStyle(.secondary)
+                if !store.searchText.isEmpty || store.selectedGroup != nil {
+                    let hiddenCount = store.selection.subtracting(store.filteredComputers.map(\.id)).count
+                    if hiddenCount > 0 {
+                        Text("\(hiddenCount) selected outside this view").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
                 Button { Task { await store.wake(store.selectedComputers) } } label: {
                     HStack {
                         Image(systemName: "sun.max.fill")
@@ -126,6 +144,11 @@ struct ContentView: View {
                 }.foregroundStyle(.tertiary)
             }.padding(16)
         }.background(.regularMaterial)
+    }
+
+    private func moveComputer(_ id: UUID, direction: Int) {
+        do { try store.moveComputer(id: id, direction: direction) }
+        catch { store.errorMessage = error.localizedDescription }
     }
 
     @ViewBuilder private var detail: some View {
@@ -277,6 +300,10 @@ private struct ComputerRow: View {
     var isSelected: Bool
     var focus: () -> Void
     var toggle: () -> Void
+    var canMoveUp: Bool
+    var canMoveDown: Bool
+    var moveUp: () -> Void
+    var moveDown: () -> Void
     var body: some View {
         HStack(spacing: 10) {
             Button(action: toggle) { Image(systemName: isSelected ? "checkmark.square.fill" : "square").font(.system(size: 15)).foregroundStyle(isSelected ? Sunshine.accent : Color.secondary.opacity(0.5)) }.buttonStyle(.plain).help("Select \(computer.name) for batch wake").accessibilityLabel("Select \(computer.name)")
@@ -290,6 +317,14 @@ private struct ComputerRow: View {
                     Spacer(minLength: 0)
                 }.contentShape(Rectangle())
             }.buttonStyle(.plain)
+            VStack(spacing: 2) {
+                Button(action: moveUp) {
+                    Image(systemName: "chevron.up").frame(width: 22, height: 17).contentShape(Rectangle())
+                }.disabled(!canMoveUp).help("Move up in the list").accessibilityLabel("Move \(computer.name) up")
+                Button(action: moveDown) {
+                    Image(systemName: "chevron.down").frame(width: 22, height: 17).contentShape(Rectangle())
+                }.disabled(!canMoveDown).help("Move down in the list").accessibilityLabel("Move \(computer.name) down")
+            }.font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary).buttonStyle(.plain)
         }.padding(.horizontal, 10).padding(.vertical, 10)
             .background(isFocused ? Sunshine.accent.opacity(0.1) : .clear, in: RoundedRectangle(cornerRadius: 11))
     }

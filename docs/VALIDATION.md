@@ -1,3 +1,11 @@
+# Version 1.1.0 validation
+
+- All 24 automated tests pass: 14 core tests and 10 application-state tests.
+- Ordering tests verify persistence across reopening, CSV export order, filtered/grouped moves with hidden rows left in place, boundary moves, preservation of selection/status/focus, updates/imports, and unchanged state when saving fails.
+- The Select all button selects the whole saved inventory. UI review verified that filtering to two sample computers still selects all five and displays the three hidden selections.
+- UI review verified moving computers up and down with the row buttons, disabled boundary controls, and the reordered batch list after selecting all computers. Right-click Move Up was also exercised.
+- The universal signed release uses the same notarization and Gatekeeper verification process described below.
+
 # Version 1.0.0 validation
 
 Validated on the development Mac on November 5, 2026.
