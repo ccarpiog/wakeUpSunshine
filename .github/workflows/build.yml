@@ -1,0 +1,24 @@
+name: Build and test macOS app
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test parser, persistence, validation, and network packets
+        run: swift test
+      - name: Build universal application
+        run: scripts/build.sh
+      - name: Archive development app
+        run: ditto -c -k --keepParent 'build/Wake Up Sunshine.app' build/WakeUpSunshine-development.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WakeUpSunshine-development
+          path: build/WakeUpSunshine-development.zip
+          if-no-files-found: error
