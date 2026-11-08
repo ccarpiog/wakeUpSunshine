@@ -33,11 +33,13 @@ run_step check-codesign xcrun --find codesign
 run_step check-notarytool xcrun --find notarytool
 run_step check-stapler xcrun --find stapler
 # Use the certificate SHA-1 so accented identity names survive any shell locale.
-SIGNING_IDENTITY="${SIGNING_IDENTITY:-$(security find-identity -v -p codesigning | awk '/"Developer ID Application:/ { print $2; exit }')}"
-if [ -z "$SIGNING_IDENTITY" ]; then
-  echo "No valid Developer ID Application identity. Import Certificates.p12 using Keychain Access, then run again. The script will not import it." >&2
-  exit 2
+source "$PROJECT_ROOT/scripts/lib/developer-id.sh"
+# Keep the existing explicit override, but require a complete fingerprint rather than a name.
+if [[ -n "${SIGNING_IDENTITY:-}" && -z "${DEVELOPER_ID_SHA1+x}" ]]; then
+  DEVELOPER_ID_SHA1="$SIGNING_IDENTITY"
 fi
+select_developer_id || exit 2
+SIGNING_IDENTITY="$DEVELOPER_ID_HASH"
 # Read identifiers at runtime so rotating them requires no source change.
 KEY_ID="$(tr -d '[:space:]' < "$CRED_ROOT/App Store Connect API/Key ID.txt")"
 ISSUER_ID="$(tr -d '[:space:]' < "$CRED_ROOT/App Store Connect API/Issuer ID.txt")"
@@ -61,6 +63,7 @@ unset KEY_ID ISSUER_ID P8_PATH
 run_step sign-executable codesign --force --timestamp --options=runtime --sign "$SIGNING_IDENTITY" "$APP_PATH/Contents/MacOS/WakeUpSunshine"
 run_step sign-bundle codesign --force --timestamp --options=runtime --entitlements "$ENTITLEMENTS" --sign "$SIGNING_IDENTITY" "$APP_PATH"
 run_step verify-signature codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+verify_developer_id_signature "$APP_PATH"
 run_step show-signature codesign --display --verbose=4 "$APP_PATH"
 SUBMISSION_ZIP="$OUTPUT_DIR/WakeUpSunshine-submission.zip"
 run_step prepare-submission /usr/bin/ditto -c -k --keepParent "$APP_PATH" "$SUBMISSION_ZIP"
